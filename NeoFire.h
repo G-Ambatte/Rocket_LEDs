@@ -1,10 +1,8 @@
 #ifndef NEOFIRE_H_
 #define NEOFIRE_H_
 
-#define PIN 12          // NeoPixel data output pin
-#define CNT 60          // Number of NeoPixels
-
 #include <Adafruit_NeoPixel.h>
+#include "params.h"
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
