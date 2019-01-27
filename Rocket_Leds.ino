@@ -5,7 +5,7 @@
 
 #include "df.h"
 #include "params.h"
-#include "NeoFire.h"
+#include "neoFire.h"
 
 const int buttonCount = 3;                                      //total number of buttons to be connected
 int buttonState[buttonCount] = {0, 0, 0};                       //initial states of each button
