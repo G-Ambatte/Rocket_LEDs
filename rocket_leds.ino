@@ -2,9 +2,10 @@
   turn on a LED when the button is pressed
   turn it off when the button is not pressed (or released)
 */
-#include "NeoFire.h"
+
 #include "df.h"
 #include "params.h"
+#include "NeoFire.h"
 
 const int buttonCount = 3;                                      //total number of buttons to be connected
 int buttonState[buttonCount] = {0, 0, 0};                       //initial states of each button

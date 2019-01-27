@@ -2,7 +2,7 @@
 #define NEOFIRE_H_
 
 #include <Adafruit_NeoPixel.h>
-#include "params.h"
+//#include "params.h"
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
