@@ -26,7 +26,7 @@ class NeoFire
     void Begin();
     void Draw(uint32_t color);
     void Clear(bool update_afterwards = false);
-    enum States { OFF, ON, BOOST };
+    enum States { OFF, STARTUP, RUN, BOOST, SHUTDOWN };
     int getState();
     void setState(States target_state);
     void Update();
@@ -83,7 +83,8 @@ void NeoFire::setState(States target_state) {
 void NeoFire::Update() {
 
   switch (state) {                                          //Fire State Machine
-    case States::ON:                                        //if fire is ON
+    case States::RUN:                                       //if fire is ON
+    case States::STARTUP:                                   //  or STARTUP
       if (millis() > delay_draw)                            //AND if the flame update timer has expired
       {
         Draw(fire_color);                                   //  show the fire!
@@ -94,7 +95,7 @@ void NeoFire::Update() {
       Draw(boost_color);                                    //  show the BOOST flame!
       if (millis() > delay_boost)                           //if boost timer is expired
       {
-        state = States::ON;                                 //  set state to ON
+        state = States::RUN;                                 //  set state to ON
       }
       break;
     case States::OFF:                                       //if fire is OFF

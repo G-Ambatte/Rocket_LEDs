@@ -10,6 +10,7 @@
 const int buttonCount = 3;                                      //total number of buttons to be connected
 int buttonState[buttonCount] = {0, 0, 0};                       //initial states of each button
 int pinButton[buttonCount] = {2, 3, 4};                         //the pins where we connect the buttons
+int debounce[buttonCount] = {0, 0, 0};                          //initial debounce state for each button
 int pinVolume = 14;                                             //the pin where we connect the volume potentiometer
 #ifdef DEBUG
 int LED = LED_BUILTIN;                                          //the pin for the Arduino's built in LED, usually 13
@@ -46,7 +47,7 @@ void setup()
   fire.Begin();                                                 //initialize the NeoPixels
   mp3.begin();                                                  //initialize the MP3 player
   mp3.setVolume(24);                                            //set initial volume
-  mp3.setRepeatPlay(true);                                      //all sounds play until stopped, so turn on loop play
+  mp3.setRepeatPlay(false);                                      //all sounds play until stopped, so turn on loop play
 }
 
 ///
@@ -54,7 +55,7 @@ void setup()
 ///
 void loop() {
   if (!mute) {                                                    //if mute is not true
-    int currentVol = map(analogRead(pinVolume), 0, 1023, 0, 255); //check the volume potentiometer position
+    int currentVol = map(analogRead(pinVolume), 0, 1023, 0, 30); //check the volume potentiometer position
     if (vol != currentVol) {                                      //if volume has changed
       vol = currentVol;                                           //  update the value
       mp3.setVolume(vol);                                         //  and set the volume to the new level
@@ -65,18 +66,22 @@ void loop() {
     buttonState[i] = digitalRead(pinButton[i]);                 //  update the states
   }
   if (buttonState[0] == 0) {                                    //if the first button is pressed
-    if (fire.getState() == fire.States::OFF) {                  //if the fire is OFF
-      fire.setState(fire.States::ON);                           //  turn it ON
-      if (!mute) {                                              //  if mute is not true
-        mp3.stop();                                             //    stop any current sounds
-        mp3.playMp3FolderTrack(1);                              //    play the ON sound
-      }
+    if (debounce[0] == 0) {                                     //if the debounce flag is not set
+      debounce[0] = 1;                                          //set the debounce flag for this pin
+      if (fire.getState() == fire.States::OFF) {                //if the fire is OFF
+        fire.setState(fire.States::STARTUP);                    //  turn it ON
+        if (!mute) {                                            //  if mute is not true
+          mp3.stop();                                           //    stop any current sounds
+          mp3.playMp3FolderTrack(1);                            //    play the ON sound
+        }
 #ifdef DEBUG
-      digitalWrite(LED, 1);                                     //turn on the built in LED
+        digitalWrite(LED, 1);                                   //turn on the built in LED
 #endif
+      }
     }
   } else {                                                      //if first button is not pressed
-    if (fire.getState() == fire.States::ON) {                   //if the fire is ON
+    debounce[0] = 0;                                            //clear the debounce flag
+    if (fire.getState() == fire.States::RUN) {                  //if the fire is ON
       fire.setState(fire.States::OFF);                          //  turn it OFF
       mp3.stop();                                               //  stop playing sound
 #ifdef DEBUG
@@ -85,18 +90,27 @@ void loop() {
     }
   }
   if (buttonState[1] == 0) {                                    //if the second button is pressed
-    if (fire.getState() == fire.States::ON) {                   //  AND if the fire is ON
-      fire.setState(fire.States::BOOST);                        //  turn it to BOOST
-      if (!mute) {                                              //  if mute is not true
-        mp3.stop();                                             //    stop any current sounds
-        mp3.playMp3FolderTrack(2);                              //    play the BOOST sound
+    if (debounce[0] == 0) {                                     //if the debounce flag is not set
+      debounce[1] = 1;                                          //set the debounce flag for this pin
+      if (fire.getState() == fire.States::RUN) {                 //  AND if the fire is ON
+        fire.setState(fire.States::BOOST);                      //  turn it to BOOST
+        if (!mute) {                                            //  if mute is not true
+          mp3.stop();                                           //    stop any current sounds
+          mp3.playMp3FolderTrack(2);                            //    play the BOOST sound
+        }
       }
     }
+  } else {                                                      //if the second button is NOT pressed
+    debounce[1] = 0;                                            //clear the debounce flag
   }
   if (buttonState[2] == 0) {                                    //if the third button (switch) is closed
-    mute = true;                                                //  turn off sound
-    mp3.stop();
+    if (debounce[2] == 0) {                                     //if the debounce flag is not set
+      debounce[2] = 1;                                          //set the debounce flag
+      mute = true;                                              //  turn off sound
+      mp3.stop();
+    }
   } else {                                                      //if the third button (switch) is open
+    debounce[2] = 0;                                             //clear the debounce flag
     mute = false;                                               //  turn on sound
   }
 
