@@ -30,6 +30,8 @@ class NeoFire
     int getState();
     void setState(States target_state);
     void Update();
+    unsigned long delay_draw;
+    unsigned long delay_boost;
 
   private:
 
@@ -38,12 +40,12 @@ class NeoFire
     void SubstractColor(uint8_t position, uint32_t color);
     uint32_t Blend(uint32_t color1, uint32_t color2);
     uint32_t Substract(uint32_t color1, uint32_t color2);
-    unsigned long delay_draw;
-    unsigned long delay_boost;
     States state;
-    uint32_t fire_color;
     uint32_t off_color;
-    uint32_t boost_color;
+    int delay_startup_sound;
+    #ifdef DEBUG
+    String getName();
+    #endif
 
 };
 
@@ -55,9 +57,7 @@ NeoFire::NeoFire(Adafruit_NeoPixel& n_strip)
 {
   state = States::OFF;
   delay_draw = millis();
-  fire_color = strip.Color (75, 30, 0);
   off_color  = strip.Color (0, 0, 0);
-  boost_color = strip.Color (30, 30, 75);
 }
 
 void NeoFire::Begin()
@@ -71,40 +71,27 @@ int NeoFire::getState() {
 }
 
 void NeoFire::setState(States target_state) {
-  state = target_state;                       
+  state = target_state;
+#ifdef DEBUG
+  Serial.println(getName());
+#endif
   switch (state) {                                          //When setting a new state
     case States::OFF:                                       //if new state is OFF
       Clear(true);                                          //  clear the NeoPixels
+      break;
     case States::BOOST:                                     //if new state is BOOST
       delay_boost = millis() + random(1000, 5000);          //  set boost timer to somewhere between 1 and 5 seconds
-  }
-}
-
-void NeoFire::Update() {
-
-  switch (state) {                                          //Fire State Machine
-    case States::RUN:                                       //if fire is ON
-    case States::STARTUP:                                   //  or STARTUP
-      if (millis() > delay_draw)                            //AND if the flame update timer has expired
-      {
-        Draw(fire_color);                                   //  show the fire!
-        delay_draw = millis() + random(5, 60);              //  set a new flame update delay between 5 and 60ms
-      }
-      break;
-    case States::BOOST:                                     //if fire is BOOST
-      Draw(boost_color);                                    //  show the BOOST flame!
-      if (millis() > delay_boost)                           //if boost timer is expired
-      {
-        state = States::RUN;                                 //  set state to ON
-      }
-      break;
-    case States::OFF:                                       //if fire is OFF
-      break;                                                //  do nothing
-    default:                                                //if somehow the fire is in none of the above states, which SHOULD be impossible
-      state = States::OFF;                                  //  set it to OFF
       break;
   }
 }
+
+#ifdef DEBUG
+String NeoFire::getName() {
+  String stateNames[5] = { "OFF","STARTUP","RUN","BOOST","SHUTDOWN"};
+  return stateNames[getState()];
+}
+#endif
+  
 ///
 /// Set all colors
 ///

@@ -14,7 +14,7 @@
 #include <SoftwareSerial.h>
 #include <DFMiniMp3.h>
 
-//#include "params.h"
+#include "params.h"
 
 // implement a notification class,
 // its member methods will get called
@@ -68,8 +68,6 @@ class Mp3Notify
 #endif
     }
 };
-
-
 
 //void setup()
 //{
