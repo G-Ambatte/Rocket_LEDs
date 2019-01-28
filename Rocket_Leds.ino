@@ -54,13 +54,14 @@ void setup()
 /// Main loop
 ///
 void loop() {
-  if (!mute) {                                                    //if mute is not true
-    int currentVol = map(analogRead(pinVolume), 0, 1023, 0, 30); //check the volume potentiometer position
-    if (vol != currentVol) {                                      //if volume has changed
-      vol = currentVol;                                           //  update the value
-      mp3.setVolume(vol);                                         //  and set the volume to the new level
-    }
-  }
+////  Volume Control - currently disabled; may revisit at a later date
+//  if (!mute) {                                                    //if mute is not true
+//    int currentVol = map(analogRead(pinVolume), 0, 1023, 0, 30); //check the volume potentiometer position
+//    if (vol != currentVol) {                                      //if volume has changed
+//      vol = currentVol;                                           //  update the value
+//      mp3.setVolume(vol);                                         //  and set the volume to the new level
+//    }
+//  }
 
   for (int i = 0; i < buttonCount; i++) {                       //cycle through all of the pins
     buttonState[i] = digitalRead(pinButton[i]);                 //  update the states
