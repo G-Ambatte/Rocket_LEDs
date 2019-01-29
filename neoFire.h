@@ -26,7 +26,7 @@ class NeoFire
     void Begin();
     void Draw(uint32_t color);
     void Clear(bool update_afterwards = false);
-    enum States { OFF, STARTUP, RUN, BOOST, SHUTDOWN };
+    enum States { OFF, INIT_STARTUP, STARTUP, INIT_RUN, RUN, INIT_BOOST, BOOST, INIT_SHUTDOWN, SHUTDOWN, INIT_OFF };
     int getState();
     void setState(States target_state);
     void Update();
@@ -87,7 +87,7 @@ void NeoFire::setState(States target_state) {
 
 #ifdef DEBUG
 String NeoFire::getName() {
-  String stateNames[5] = { "OFF","STARTUP","RUN","BOOST","SHUTDOWN"};
+  String stateNames[10] = { "OFF","INIT_STARTUP","STARTUP","INIT_RUN","RUN","INIT_BOOST","BOOST","INIT_SHUTDOWN","SHUTDOWN","INIT_OFF"};
   return stateNames[getState()];
 }
 #endif

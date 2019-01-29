@@ -7,4 +7,7 @@
 #define PIN 12          // NeoPixel data output pin
 #define CNT 60          // Number of NeoPixels
 
+#define RX_PIN 10
+#define TX_PIN 11
+
 #endif
