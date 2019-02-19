@@ -57,7 +57,6 @@ void setup() {
   pinMode(pinVolume, INPUT_PULLUP);                                 //set the volume pin is INPUT_PULLUP
   fire.Begin();                                                     //initialize the NeoPixels
   mp3.begin();                                                      //initialize the MP3 player
-  mp3.setVolume(24);                                                //set initial volume
   mp3.setRepeatPlay(false);                                         //single play only
 }
 
@@ -145,8 +144,8 @@ void loop() {
     case fire.States::INIT_STARTUP:
       timer = millis() + delay_startup_sound;                       //  set a delay until end of start up sound
       if (!mute) {                                                  //  if mute is not true
-        mp3.stop();                                                 //    stop any current sounds
-        mp3.setRepeatPlay(false);                                   //    turn off loop playing
+        //mp3.stop();                                                 //    stop any current sounds
+        //mp3.setRepeatPlay(false);                                   //    turn off loop playing
         mp3.playMp3FolderTrack(STARTUP_SOUND);                      //    play the STARTUP sound
       }
       fire.setState(fire.States::STARTUP);
@@ -164,8 +163,8 @@ void loop() {
     case fire.States::INIT_RUN:
       fire.delay_draw = millis();                                   //  set fire flicker effect timer
       if (!mute) {                                                  //  if mute is not true
-        mp3.stop();                                                 //    stop anything that is still playing (shouldn't be necessary but including anyway)
-        mp3.setRepeatPlay(true);                                    //    turn on loop play
+        //mp3.stop();                                                 //    stop anything that is still playing (shouldn't be necessary but including anyway)
+        //mp3.setRepeatPlay(true);                                    //    turn on loop play
         mp3.playMp3FolderTrack(RUN_SOUND);                          //    play the RUN sound
       }
       fire.setState(fire.States::RUN);                              //  set the fire to RUN
@@ -178,8 +177,8 @@ void loop() {
       
     case fire.States::INIT_BOOST:
       if (!mute) {                                                  //if mute is not true
-        mp3.stop();                                                 //  stop any current sounds
-        mp3.setRepeatPlay(true);                                    //  turn on loop play
+        //mp3.stop();                                                 //  stop any current sounds
+        //mp3.setRepeatPlay(true);                                    //  turn on loop play
         mp3.playMp3FolderTrack(BOOST_SOUND);                        //  play the BOOST sound
       }
       fire.setState(fire.States::BOOST);
@@ -197,8 +196,8 @@ void loop() {
       timer = millis() + delay_shutdown_sound;                      //set timer to end of SHUTDOWN
       fire.delay_draw = millis();                                   //set fire flicker timer
       if (!mute) {
-        mp3.stop();                                                 //  stop playing sound
-        mp3.setRepeatPlay(false);                                   //  turn off loop play
+        //mp3.stop();                                                 //  stop playing sound
+        //mp3.setRepeatPlay(false);                                   //  turn off loop play
         mp3.playMp3FolderTrack(SHUTDOWN_SOUND);                     //  play the shutdown sound
       }
       fire.setState(fire.States::SHUTDOWN);
