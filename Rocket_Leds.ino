@@ -2,6 +2,8 @@
 #include "params.h"
 #include "neoFire.h"
 
+#include "DFRobotDFPlayerMini.h"
+
 const int buttonCount = 3;                                          //total number of buttons to be connected
 int buttonState[buttonCount] = {0, 0, 0};                           //initial states of each button
 int pinButton[buttonCount] = {2, 3, 4};                             //the pins where we connect the buttons
@@ -19,8 +21,8 @@ uint32_t boost_color = Adafruit_NeoPixel::Color (30, 30, 75);
 
 unsigned long timer;                                                //a timer for setting various delays
 int delay_startup_sound = 900; // length of the startup sound in ms
-int delay_run_sound = 1000; // length of the run sound in ms - not used, because we set loop mode
-int delay_boost_sound = 1000; // length of the boost sound in ms - not used, because we set loop mode
+int delay_run_sound = 3000; // length of the run sound in ms - not used, because we set loop mode
+int delay_boost_sound = 3000; // length of the boost sound in ms - not used, because we set loop mode
 int delay_shutdown_sound = 4150; // length of shutdown sound in ms
 
 int STARTUP_SOUND = 1;                                              //track # for the STARTUP_SOUND
@@ -38,8 +40,8 @@ uint8_t vol;                                                        //initial vo
 
 // Some arduino boards only have one hardware serial port, so a software serial port is needed instead.
 // comment out the above definition and uncomment these lines
-SoftwareSerial secondarySerial(RX_PIN, TX_PIN); // RX, TX                   //create a serial communications channel on pins 10 and 11
-DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(secondarySerial);          //create the MP3 player object using the serial communications channel
+SoftwareSerial secondarySerial(10, 11);                     //create a serial communications channel on pins 10 (RX) and 11 (TX)
+DFRobotDFPlayerMini mp3;                                            //create the MP3 player object
 
 NeoFire fire(strip);                                                //create the fire object
 
@@ -47,6 +49,12 @@ NeoFire fire(strip);                                                //create the
 /// Setup
 ///
 void setup() {
+  Serial.begin(9600);
+  for (int i = 10; i > 0; i-- ) {
+    Serial.println(i);
+    delay(1000);
+  }
+  
   for (int i = 0; i < buttonCount; i++) {
     pinMode(pinButton[i], INPUT_PULLUP);                            //set all of the button pins as INPUT_PULLUP
   }
@@ -56,8 +64,19 @@ void setup() {
   pinMode(PIN, OUTPUT);                                             //set the NeoPixel data pin as OUTPUT
   pinMode(pinVolume, INPUT_PULLUP);                                 //set the volume pin is INPUT_PULLUP
   fire.Begin();                                                     //initialize the NeoPixels
-  mp3.begin();                                                      //initialize the MP3 player
-  mp3.setRepeatPlay(false);                                         //single play only
+
+  secondarySerial.begin(9600);                                      //Init comms at 9600
+  if (!mp3.begin(secondarySerial)) {                                //Use secondarySerial to communicate with mp3.
+    Serial.println(F("Unable to begin:"));
+    Serial.println(F("1.Please recheck the connection!"));
+    Serial.println(F("2.Please insert the SD card!"));
+    while (true) {
+      Serial.print("X");
+    }
+  }
+  Serial.println(F("DFPlayer Mini online."));
+  mp3.setTimeOut(500);                                              //set comms timeout
+  mp3.volume(30);                                                   //volume to maximum
 }
 
 ///
@@ -101,7 +120,7 @@ void loop() {
         fire.setState(fire.States::INIT_SHUTDOWN);                  //  turn it SHUTDOWN
 #ifdef DEBUG
         digitalWrite(LED, 0);                                       //turn off the built in LED
-//        Serial.println("- BUTTON 1 UP");
+        //        Serial.println("- BUTTON 1 UP");
 #endif
       }
     }
@@ -118,7 +137,7 @@ void loop() {
     if (debounce[1] == 1) {                                         //  if debounce flag is set
       debounce[1] = 0;                                              //    clear the debounce flag
 #ifdef DEBUG
-//      Serial.println("- BUTTON 2 UP");
+      //      Serial.println("- BUTTON 2 UP");
 #endif
     }
   };
@@ -134,8 +153,6 @@ void loop() {
   //    mute = false;                                               //  turn on sound
   //  }
 
-  mp3.loop();                                                       //check for MP3 notifications
-
   //
   // Fire State Machine
   //
@@ -144,9 +161,7 @@ void loop() {
     case fire.States::INIT_STARTUP:
       timer = millis() + delay_startup_sound;                       //  set a delay until end of start up sound
       if (!mute) {                                                  //  if mute is not true
-        //mp3.stop();                                                 //    stop any current sounds
-        //mp3.setRepeatPlay(false);                                   //    turn off loop playing
-        mp3.playMp3FolderTrack(STARTUP_SOUND);                      //    play the STARTUP sound
+        mp3.play(STARTUP_SOUND);                                    //    play the STARTUP sound
       }
       fire.setState(fire.States::STARTUP);
     case fire.States::STARTUP:                                      //if the fire is STARTING UP
@@ -159,13 +174,11 @@ void loop() {
         fire.setState(fire.States::INIT_RUN);                       //  set the fire state to INIT_RUN
       }
       break;
-      
+
     case fire.States::INIT_RUN:
       fire.delay_draw = millis();                                   //  set fire flicker effect timer
       if (!mute) {                                                  //  if mute is not true
-        //mp3.stop();                                                 //    stop anything that is still playing (shouldn't be necessary but including anyway)
-        //mp3.setRepeatPlay(true);                                    //    turn on loop play
-        mp3.playMp3FolderTrack(RUN_SOUND);                          //    play the RUN sound
+        mp3.loop(RUN_SOUND);                                        //    play the RUN sound
       }
       fire.setState(fire.States::RUN);                              //  set the fire to RUN
     case fire.States::RUN:                                          //if fire is ON
@@ -174,12 +187,10 @@ void loop() {
         fire.delay_draw = millis() + random(5, 60);                 //  set a new flame update delay between 5 and 60ms
       }
       break;
-      
+
     case fire.States::INIT_BOOST:
       if (!mute) {                                                  //if mute is not true
-        //mp3.stop();                                                 //  stop any current sounds
-        //mp3.setRepeatPlay(true);                                    //  turn on loop play
-        mp3.playMp3FolderTrack(BOOST_SOUND);                        //  play the BOOST sound
+        mp3.loop(BOOST_SOUND);                                     //  play the BOOST sound
       }
       fire.setState(fire.States::BOOST);
     case fire.States::BOOST:                                        //if fire is BOOST
@@ -191,14 +202,12 @@ void loop() {
         }
       }
       break;
-      
+
     case fire.States::INIT_SHUTDOWN:
       timer = millis() + delay_shutdown_sound;                      //set timer to end of SHUTDOWN
       fire.delay_draw = millis();                                   //set fire flicker timer
       if (!mute) {
-        //mp3.stop();                                                 //  stop playing sound
-        //mp3.setRepeatPlay(false);                                   //  turn off loop play
-        mp3.playMp3FolderTrack(SHUTDOWN_SOUND);                     //  play the shutdown sound
+        mp3.play(SHUTDOWN_SOUND);                                   //  play the shutdown sound
       }
       fire.setState(fire.States::SHUTDOWN);
     case fire.States::SHUTDOWN:                                     //if fire is SHUTDOWN
@@ -212,13 +221,13 @@ void loop() {
         fire.setState(fire.States::INIT_OFF);                       //    set state to OFF
       }
       break;
-      
+
     case fire.States::INIT_OFF:
       mp3.stop();                                                   //stop any playing sounds
       fire.setState(fire.States::OFF);                              // and turn it OFF
     case fire.States::OFF:                                          //if fire is OFF
       break;                                                        //  do nothing
-      
+
     default:                                                        //if somehow the fire is in none of the above states, which SHOULD be impossible
       fire.setState(fire.States::OFF);                              //  set it to OFF
       break;
